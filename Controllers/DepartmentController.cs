@@ -1,79 +1,72 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication2.Dtos.Department;
 using WebApplication2.Services.Interfaces;
 
 namespace WebApplication2.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class DepartmentController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;
-        private readonly IMapper _mapper;
 
-        public DepartmentController(IDepartmentService departmentService , IMapper mapper)
+        public DepartmentController(IDepartmentService departmentService)
         {
             _departmentService = departmentService;
-            _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ResponseDepartmentDto>>> GetAllDepartments(int PageNumber=1 , int PageSize =10)
+        public async Task<ActionResult<IEnumerable<AllDepartmentsDto>>> GetAllDepartments(
+            int pageNumber = 1,
+            int pageSize = 10)
         {
-            var result =await _departmentService.GetAllDepartmentsAsync(PageNumber, PageSize);
+            var result = await _departmentService
+                .GetAllDepartmentsAsync(pageNumber, pageSize);
+
             return Ok(result);
         }
 
-        //[HttpGet ("Count")]
-        //public IActionResult GetDepartmentsEmpCount()
-        //{
-        //    var deptlist = _context.Departments.Include(d => d.Employees).ToList();
-        //    if (!deptlist.Any()) 
-        //    {
-        //        return NotFound("Data Not Found");
-        //    }
-        //    var dtolist = new List<DeptWithEmpCountDto>();
-        //    foreach (var dept in deptlist)
-        //    {
-        //        var dto = new DeptWithEmpCountDto
-        //        {
-        //            Id = dept.Id,
-        //            Name = dept.Name,
-        //            EmployeeCount = dept.Employees.Count()
-        //        };
-        //        dtolist.Add(dto);
-        //    }
-        //    return Ok(dtolist);
-        //}
-
-
-        [HttpGet("{Id}")]
-        public async Task<ActionResult<ResponseDepartmentDto>> GetDepartmentById(int id)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<DepartmentDetalisDto>> GetDepartmentById(int id)
         {
-            var data =await _departmentService.GetDepartmentByIdAsync(id);
+            var data = await _departmentService.GetDepartmentByIdAsync(id);
             return Ok(data);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<ResponseDepartmentDto>> AddDepartment(CreateDepartmentDto department)
+        public async Task<ActionResult<DepartmentDetalisDto>> AddDepartment([FromBody] CreateDepartmentDto department)
         {
-           var result =await _departmentService.AddDepartmentAsync(department);
+            var result = await _departmentService.AddDepartmentAsync(department);
+
+            return CreatedAtAction(
+                nameof(GetDepartmentById),
+                new { id = result.Id },
+                result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<DepartmentDetalisDto>> UpdateDepartment(int id,[FromBody] UpdateDepartmentDto department)
+        {
+            var result = await _departmentService.UpdateDepartmentAsync(id, department);
             return Ok(result);
         }
-        [HttpPut]
-        public async Task<ActionResult<ResponseDepartmentDto>> UpdateDepartment(int id, CreateDepartmentDto department)
-        {
-            var result =await _departmentService.UpdateDepartmentAsync(id, department);
-            return Ok(result);
-        }     
 
-        [HttpDelete]
-        public async Task<ActionResult<ResponseDepartmentDto>> DeleteDepartment(int id)
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult<DepartmentDetalisDto>> DeleteDepartment(int id)
         {
-            var result=await _departmentService.DeleteDepartmentAsync(id);
+            var result = await _departmentService.DeleteDepartmentAsync(id);
+            return Ok(result);
+        }
+        [HttpPut("{departmentId}/{managerId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<DepartmentDetalisDto>> AssignManager(int departmentId, int managerId)
+        {
+            var result = await _departmentService.AssignManagerAsync(departmentId, managerId);
             return Ok(result);
         }
 

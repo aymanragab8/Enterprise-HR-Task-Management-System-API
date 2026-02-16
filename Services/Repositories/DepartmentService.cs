@@ -18,10 +18,7 @@ namespace WebApplication2.Services
             _mapper = mapper;
         }
 
-        // ============================
-        // Add
-        // ============================
-        public async Task<ResponseDepartmentDto> AddDepartmentAsync(CreateDepartmentDto department)
+        public async Task<DepartmentDetalisDto> AddDepartmentAsync(CreateDepartmentDto department)
         {
             if (department == null)
                 throw new ArgumentNullException(nameof(department));
@@ -30,52 +27,43 @@ namespace WebApplication2.Services
             await _context.Departments.AddAsync(dept);
             await _context.SaveChangesAsync();
 
-            var result = _mapper.Map<ResponseDepartmentDto>(dept);
+            var result = _mapper.Map<DepartmentDetalisDto>(dept);
             return result;
         }
 
-        // ============================
-        // Delete
-        // ============================
-        public async Task<ResponseDepartmentDto> DeleteDepartmentAsync(int id)
+        public async Task<DepartmentDetalisDto> DeleteDepartmentAsync(int id)
         {
             if (id <= 0)
                 throw new ArgumentException("Enter Valid Id");
 
-            var dept = _context.Departments.Find(id);
+            var dept =await _context.Departments.FindAsync(id);
             if (dept == null)
                 throw new KeyNotFoundException("Department Not Found");
 
             
-            _context.Departments.Remove(dept);
+            dept.IsDeleted=true;
             await _context.SaveChangesAsync();
 
-            var result = _mapper.Map<ResponseDepartmentDto>(dept);
-            return result;
+            return _mapper.Map<DepartmentDetalisDto>(dept);
         }
 
-        // ============================
-        // Get All (With Pagination)
-        // ============================
-        public async Task<IEnumerable<ResponseDepartmentDto>> GetAllDepartmentsAsync(int pageNumber = 1, int pageSize = 10)
+        public async Task<IEnumerable<AllDepartmentsDto>> GetAllDepartmentsAsync(int pageNumber = 1, int pageSize = 10)
         {
             if (pageNumber <= 0 || pageSize <= 0)
                 throw new ArgumentException("Invalid pagination parameters.");
 
             var departments = await _context.Departments
                 .AsNoTracking()
+                .OrderBy(d => d.Id)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            var result = _mapper.Map<IEnumerable<ResponseDepartmentDto>>(departments);
+            var result = _mapper.Map<IEnumerable<AllDepartmentsDto>>(departments);
             return result;
         }
 
-        // ============================
-        // Get By Id
-        // ============================
-        public async Task<ResponseDepartmentDto> GetDepartmentByIdAsync(int id)
+        public async Task<DepartmentDetalisDto> GetDepartmentByIdAsync(int id)
         {
             if (id <= 0)
                 throw new ArgumentException("Invalid Id.");
@@ -87,14 +75,11 @@ namespace WebApplication2.Services
             if (department == null)
                 throw new KeyNotFoundException($"Department with Id {id} not found.");
 
-            var result = _mapper.Map<ResponseDepartmentDto>(department);
+            var result = _mapper.Map<DepartmentDetalisDto>(department);
             return result;
         }
 
-        // ============================
-        // Update
-        // ============================
-        public async Task<ResponseDepartmentDto> UpdateDepartmentAsync(int id, CreateDepartmentDto departmentDto)
+        public async Task<DepartmentDetalisDto> UpdateDepartmentAsync(int id, UpdateDepartmentDto departmentDto)
         {
             if (id <= 0)
                 throw new ArgumentException("Invalid Id.");
@@ -102,18 +87,51 @@ namespace WebApplication2.Services
             if (departmentDto == null)
                 throw new ArgumentNullException(nameof(departmentDto));
 
-            var entity = await _context.Departments.FindAsync(id);
+            var entity = await _context.Departments.Include(d=>d.Manager).FirstOrDefaultAsync(d=>d.Id==id);
 
             if (entity == null)
                 throw new KeyNotFoundException($"Department with Id {id} not found.");
 
-            // دي أقوى ميزة في AutoMapper 👇
-           var response = _mapper.Map(departmentDto, entity);
 
+            _mapper.Map(departmentDto, entity);
             await _context.SaveChangesAsync();
-            var result = _mapper.Map<ResponseDepartmentDto>(response);
+            var result = _mapper.Map<DepartmentDetalisDto>(entity);
 
             return result;
+        }
+        public async Task<DepartmentDetalisDto> AssignManagerAsync(int departmentId, int managerId)
+        {
+            var department = await _context.Departments
+                .FirstOrDefaultAsync(d => d.Id == departmentId);
+
+            if (department == null)
+                throw new KeyNotFoundException("Department not found.");
+
+            var employee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.Id == managerId);
+
+            if (employee == null)
+                throw new KeyNotFoundException("Employee not found.");
+
+            if (employee.DepartmentId != departmentId)
+                throw new ArgumentException("Employee must belong to the same department.");
+
+            department.ManagerId = managerId;
+
+            await _context.SaveChangesAsync();
+
+            var result = await _context.Departments
+                .Where(d => d.Id == departmentId)
+                .Select(d => new DepartmentDetalisDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    ManagerName = d.Manager != null ? d.Manager.Name : null ,
+                    Code = d.Code
+                })
+                .FirstOrDefaultAsync();
+
+            return result!;
         }
     }
 }

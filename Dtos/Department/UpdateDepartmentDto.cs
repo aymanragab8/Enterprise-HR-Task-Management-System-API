@@ -7,4 +7,6 @@
     public string? Description { get; set; }
 
     public int? ManagerId { get; set; }
+    public string? ManagerName { get; set; }
+
 }

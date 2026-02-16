@@ -1,17 +1,19 @@
-﻿using WebApplication2.Dtos.Department;
+﻿using WebApplication2.Dtos.Common;
+using WebApplication2.Dtos.Department;
 
 namespace WebApplication2.Services.Interfaces
 {
     public interface IDepartmentService
     {
-        Task<IEnumerable<ResponseDepartmentDto>> GetAllDepartmentsAsync(int pageNumber = 1, int pageSize = 10);
+        Task<IEnumerable<AllDepartmentsDto>> GetAllDepartmentsAsync(int PageNumber = 1, int PageSize = 10);
 
-        Task<ResponseDepartmentDto> GetDepartmentByIdAsync(int id);
+        Task<DepartmentDetalisDto> GetDepartmentByIdAsync(int id);
 
-        Task<ResponseDepartmentDto> AddDepartmentAsync(CreateDepartmentDto department);
+        Task<DepartmentDetalisDto> AddDepartmentAsync(CreateDepartmentDto department);
 
-        Task<ResponseDepartmentDto> UpdateDepartmentAsync(int id, CreateDepartmentDto department);
+        Task<DepartmentDetalisDto> UpdateDepartmentAsync(int id, UpdateDepartmentDto department);
 
-        Task<ResponseDepartmentDto> DeleteDepartmentAsync(int id);
+        Task<DepartmentDetalisDto> DeleteDepartmentAsync(int id);
+        Task<DepartmentDetalisDto> AssignManagerAsync(int departmentId, int managerId);
     }
 }

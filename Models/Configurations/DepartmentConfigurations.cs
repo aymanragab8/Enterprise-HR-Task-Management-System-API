@@ -17,11 +17,13 @@ namespace WebApplication2.Models.Configurations
             builder.Property(d => d.IsDeleted).IsRequired();
             builder.Property(d => d.CreatedAt).IsRequired();
             builder.Property(d => d.UpdatedAt).IsRequired(false);
+            builder.HasQueryFilter(e => !e.IsDeleted);
 
             builder.HasOne(d => d.Manager)
                    .WithMany()
                    .HasForeignKey(d => d.ManagerId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .OnDelete(DeleteBehavior.Restrict)
+                   .IsRequired(false);
 
         }
     }
