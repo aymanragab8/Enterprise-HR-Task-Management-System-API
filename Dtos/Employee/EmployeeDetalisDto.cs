@@ -12,7 +12,6 @@ namespace WebApplication2.Dtos.Employee
         public string Address { get; set; }
         public string DepartmentName { get; set; }
         public EmployeeStatus Status { get; set; }
-        public decimal? BasicSalary { get; set; }
     }
 
 }

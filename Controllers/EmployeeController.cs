@@ -20,11 +20,12 @@ namespace WebApplication2.Controllers
         }
 
 
-        [Authorize(Roles = "Admin,Manager")]
         [HttpGet("{id:int}")]
         public async Task<ActionResult<EmployeeDetailsDto>> GetEmployeeById(int id)
         {
-            var employee = await _employeeService.GetEmployeeByIdAsync(id);
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+            var employee = await _employeeService.GetEmployeeByIdAsync(id ,role , currentUserId);
             return Ok(employee);
         }
 

@@ -117,13 +117,30 @@ namespace WebApplication2.Services.Repositories
 
 
 
-        public async Task<EmployeeDetailsDto> GetEmployeeByIdAsync(int id)
+        public async Task<EmployeeDetailsDto> GetEmployeeByIdAsync(int id , string role , string currentUserId)
         {
             if (id <= 0)
                 throw new ArgumentException("Enter Valid Id");
+
             var emp =await _context.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
             if (emp == null)
                 throw new KeyNotFoundException("Employee Not Found");
+            if (role == "Admin")
+                _mapper.Map<EmployeeDetailsDto>(emp);
+            else if (role == "Manager")
+            {
+                var manager = await _context.Employees.FirstOrDefaultAsync(e => e.ApplicationUserId == currentUserId);
+                if (emp.DepartmentId == manager.DepartmentId)
+                    _mapper.Map<EmployeeDetailsDto>(emp);
+                else throw new UnauthorizedAccessException();
+            }
+            else if (role == "Employee")
+            {
+                var employee = await _context.Employees.FirstOrDefaultAsync(e => e.ApplicationUserId == currentUserId);
+                if (id == employee.Id)
+                    _mapper.Map<EmployeeDetailsDto>(emp);
+                else throw new UnauthorizedAccessException();
+            }
             var result = _mapper.Map<EmployeeDetailsDto>(emp);
             return result;
         }
