@@ -1,13 +1,14 @@
-﻿using WebApplication2.Dtos.Employee;
+﻿using WebApplication2.Dtos.Common;
+using WebApplication2.Dtos.Employee;
 
 namespace WebApplication2.Services.Interfaces
 {
     public interface IEmployeeService
     {
-            Task<IEnumerable<ResponseEmployeeDto>> GetAllEmployeesAsync(int PageNumber , int PageSize);
-            Task<ResponseEmployeeDto> GetEmployeeByIdAsync(int id);
-            Task<ResponseEmployeeDto> CreateEmployeeAsync(CreateEmployeeDto employee);
-            Task<ResponseEmployeeDto> UpdateEmployeeAsync(int id, CreateEmployeeDto employee);
-            Task<ResponseEmployeeDto> DeleteEmployeeAsync(int id);   
+            Task<IEnumerable<AllEmployeesDto>> GetEmployeesAsync(string currentUserId,string role, int? departmentId = null,int pageNumber = 1,int pageSize = 10);
+            Task<EmployeeDetailsDto> GetEmployeeByIdAsync(int id);
+            Task<EmployeeDetailsDto> AddEmployeeAsync(CreateEmployeeRequestDto request);
+            Task<EmployeeDetailsDto> UpdateEmployeeAsync(int id, UpdateEmployeeDto employee, string currentUserId, string role);
+            Task<EmployeeDetailsDto> DeleteEmployeeAsync(int id);   
     }
 }

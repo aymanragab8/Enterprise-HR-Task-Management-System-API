@@ -1,57 +1,76 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
+using System.Security.Claims;
 using WebApplication2.Dtos.Employee;
-using WebApplication2.Models;
 using WebApplication2.Services.Interfaces;
 
 namespace WebApplication2.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        private readonly IMapper _mapper;
         private readonly IEmployeeService _employeeService;
 
-        public EmployeeController(IMapper mapper ,IEmployeeService employeeService)
+        public EmployeeController(IEmployeeService employeeService)
         {
-            _mapper = mapper;
             _employeeService = employeeService;
         }
 
 
-        [HttpGet("{Id}")]
-        public async Task<ActionResult<ResponseEmployeeDto>> GetEmployeeById(int id)
-        { 
-            var employee =await _employeeService.GetEmployeeByIdAsync(id);
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<EmployeeDetailsDto>> GetEmployeeById(int id)
+        {
+            var employee = await _employeeService.GetEmployeeByIdAsync(id);
             return Ok(employee);
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ResponseEmployeeDto>>> GetAllEmployees(int PageNumber = 1 ,int pageSize = 10)
+        public async Task<ActionResult<IEnumerable<EmployeeDetailsDto>>> GetEmployees(int? departmentId = null,int pageNumber = 1,int pageSize = 10)
         {
-            var result = await _employeeService.GetAllEmployeesAsync(PageNumber, pageSize);
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            string currentUserId =User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+
+            var result = await _employeeService.GetEmployeesAsync(
+                currentUserId,
+                role,
+                departmentId,
+                pageNumber,
+                pageSize);
+
+            if (result == null)
+                return Forbid();
             return Ok(result);
         }
-        [HttpPost]
-        public async Task<ActionResult<ResponseEmployeeDto>> CreateNewEmployee(CreateEmployeeDto employee)
+
+        [HttpPost("create")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<EmployeeDetailsDto>> CreateEmployee(CreateEmployeeRequestDto request)
         {
-            var result = await _employeeService.CreateEmployeeAsync(employee);
+            var result = await _employeeService.AddEmployeeAsync(request);
             return Ok(result);
         }
-        [HttpPut]
-        public async Task<ActionResult<ResponseEmployeeDto>> UpdateEmployeeData(int id ,CreateEmployeeDto employee)
+
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<EmployeeDetailsDto>> UpdateEmployeeData(int id,[FromBody] UpdateEmployeeDto employee)
         {
-            var result = await _employeeService.UpdateEmployeeAsync(id ,employee);
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            string currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+            var result = await _employeeService.UpdateEmployeeAsync(id, employee, currentUserId, role);
             return Ok(result);
         }
-        [HttpDelete]
-        public async Task<ActionResult<ResponseEmployeeDto>> DeleteEmployee(int id)
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult<EmployeeDetailsDto>> DeleteEmployee(int id)
         {
             var result = await _employeeService.DeleteEmployeeAsync(id);
             return Ok(result);
         }
-
     }
 }

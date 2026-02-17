@@ -16,15 +16,20 @@ namespace WebApplication2.Models.Configurations
             builder.Property(e => e.PhoneNumber).HasMaxLength(20); 
             builder.Property(e => e.Address).HasMaxLength(200); 
             builder.Property(e => e.JobTitle).HasMaxLength(50); 
-            builder.Property(e => e.Salary).HasColumnType("decimal(10,2)"); 
             builder.Property(e => e.Status).IsRequired(); 
             builder.Property(e => e.IsDeleted).IsRequired(); 
             builder.Property(e => e.CreatedAt).IsRequired();
             builder.Property(e => e.UpdatedAt).IsRequired(false);
+            builder.HasQueryFilter(e => !e.IsDeleted);
 
             builder.HasOne(e => e.Department) 
                 .WithMany(d => d.Employees) 
                 .HasForeignKey(e => e.DepartmentId) 
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(e=>e.ApplicationUser)
+                .WithOne(a=>a.Employee)
+                .HasForeignKey<Employee>(e => e.ApplicationUserId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

@@ -7,8 +7,15 @@ namespace WebApplication2.Mapping
     {
         public EmployeeProfile()
         {
-            CreateMap<CreateEmployeeDto, Employee>().ReverseMap();
-            CreateMap<ResponseEmployeeDto, Employee>().ReverseMap();
+            CreateMap<CreateEmployeeDto, Employee>();
+            CreateMap<UpdateEmployeeDto, Employee>()
+                    .ForAllMembers(opts =>
+                    opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<Employee, EmployeeDetailsDto>();
+            CreateMap<Employee, AllEmployeesDto>()
+                            .ForMember(dest => dest.DepartmentName,
+                       opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : ""));
+
         }
 
     }
