@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -7,7 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using WebApplication2.Dtos.Auth;
 using WebApplication2.Models.Entities;
-using WebApplication2.Roles;
+
 
 
 
@@ -77,11 +76,9 @@ namespace WebApplication2.Controllers
                 return BadRequest(ModelState);
             }
 
-            //Design JWT token here
 
             List<Claim> userclaims = new List<Claim>                //5
             {
-                // Add claims as needed, for example: Id,UserName, Role, etc.
                 new Claim(ClaimTypes.NameIdentifier,user.Id),
                 new Claim(ClaimTypes.Name,user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
@@ -107,7 +104,6 @@ namespace WebApplication2.Controllers
                 signingCredentials : signingCred                        //10
                 );
             
-            // generate the token string and return it to the client
             return Ok(new                                                   //11
         {
             mytoken = new JwtSecurityTokenHandler().WriteToken(token),

@@ -10,7 +10,7 @@ namespace WebApplication2.Models.Data
          public DbSet<Department> Departments { get; set; }
          public DbSet<Employee> Employees { get; set; }
          public DbSet<Attendance>Attendances { get; set; }
-         public DbSet<Entities.EmployeeTask> Tasks { get; set; }
+         public DbSet<EmployeeTask> Tasks { get; set; }
          public DbSet<LeaveRequest>LeaveRequests { get; set; }
          public DbSet<Salary>Salaries { get; set; }
 

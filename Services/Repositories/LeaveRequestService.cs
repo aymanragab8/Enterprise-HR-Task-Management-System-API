@@ -51,7 +51,6 @@ namespace WebApplication2.Services.Repositories
 
             var query = _context.LeaveRequests
                 .Include(l => l.Employee)
-                .Where(l => !l.IsDeleted)
                 .AsQueryable();
 
             if (role == "Employee")
